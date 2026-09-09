@@ -31,11 +31,39 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
-      - name: Prepare index.html
+      - name: Prepare site for GitHub Pages
         run: |
+          set -e
+          test -f dist/client/_shell.html
           cp dist/client/_shell.html dist/client/index.html
-          cp public/manifest.webmanifest dist/client/manifest.webmanifest || true
+          cp public/manifest.webmanifest dist/client/manifest.webmanifest
+          touch dist/client/.nojekyll
+
+          python3 << 'PY'
+          from pathlib import Path
+          p = Path("dist/client/index.html")
+          html = p.read_text(encoding="utf-8")
+          html = html.replace('href="/__grok/manifest.webmanifest"', 'href="/Grok_sandbox/manifest.webmanifest"')
+          html = html.replace('href="/__grok/icon-180.png"', 'href="/Grok_sandbox/__grok/icon-180.png"')
+          if "apple-mobile-web-app-capable" not in html:
+              html = html.replace(
+                  "</head>",
+                  '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+                  '<meta name="apple-mobile-web-app-title" content="Aurora">\n'
+                  "</head>",
+              )
+          p.write_text(html, encoding="utf-8")
+          assert "index.html" in str(p) and p.stat().st_size > 100
+          print("index.html size:", p.stat().st_size)
+          for line in html.splitlines():
+              if any(k in line for k in ("manifest", "apple-touch", "apple-mobile", "theme-color")):
+                  print(line)
+          PY
+
+          echo "=== dist/client listing ==="
           ls -la dist/client
+          test -f dist/client/index.html
+          test -f dist/client/manifest.webmanifest
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
