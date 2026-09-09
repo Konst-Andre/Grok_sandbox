@@ -31,11 +31,23 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
+      - name: Show build output
+        run: |
+          echo "==== ls root ===="
+          ls -la
+          echo "==== ls dist ===="
+          ls -la dist 2>/dev/null || echo "no dist"
+          echo "==== ls dist/client ===="
+          ls -la dist/client 2>/dev/null || echo "no dist/client"
+          echo "==== find index.html ===="
+          find . -name "index.html" -not -path "./node_modules/*" 2>/dev/null | head -20
+          echo "==== find _shell.html ===="
+          find . -name "_shell.html" -not -path "./node_modules/*" 2>/dev/null | head -10
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Спробуємо найімовірніші шляхи по черзі, якщо впаде
-          path: dist
+          path: dist/client
 
   deploy:
     needs: build
