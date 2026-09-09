@@ -25,7 +25,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - run: npm install
 
       - run: npm run build
         env:
@@ -34,7 +34,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Якщо збірка впаде — зміни path на dist або .output/public
+          # Якщо впаде — спробуй path: dist або path: .output/public
           path: dist/client
 
   deploy:
