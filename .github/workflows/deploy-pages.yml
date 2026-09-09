@@ -34,8 +34,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Якщо впаде — спробуй path: dist або path: .output/public
-          path: dist/client
+          # Спробуємо найімовірніші шляхи по черзі, якщо впаде
+          path: dist
 
   deploy:
     needs: build
