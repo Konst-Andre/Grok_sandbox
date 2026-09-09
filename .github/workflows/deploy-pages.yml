@@ -31,34 +31,10 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
-      - name: Prepare files for GitHub Pages
+      - name: Prepare index.html
         run: |
-          set -e
           cp dist/client/_shell.html dist/client/index.html
-          cp public/manifest.webmanifest dist/client/manifest.webmanifest
-
-          # Безпечна заміна шляхів через Python (не ламає HTML)
-          python3 << 'PY'
-          from pathlib import Path
-          p = Path("dist/client/index.html")
-          html = p.read_text(encoding="utf-8")
-          html = html.replace('href="/__grok/manifest.webmanifest"', 'href="/Grok_sandbox/manifest.webmanifest"')
-          html = html.replace('href="/__grok/icon-180.png"', 'href="/Grok_sandbox/__grok/icon-180.png"')
-          if 'apple-mobile-web-app-capable' not in html:
-              html = html.replace(
-                  '</head>',
-                  '<meta name="apple-mobile-web-app-capable" content="yes">\n'
-                  '<meta name="apple-mobile-web-app-title" content="Aurora">\n'
-                  '</head>'
-              )
-          p.write_text(html, encoding="utf-8")
-          print("OK, head tags:")
-          for line in html.splitlines():
-              if any(x in line for x in ("manifest", "apple-touch", "apple-mobile", "theme-color")):
-                  print(line)
-          PY
-
-          echo "=== files ==="
+          cp public/manifest.webmanifest dist/client/manifest.webmanifest || true
           ls -la dist/client
 
       - name: Upload artifact
