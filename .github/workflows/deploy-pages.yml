@@ -31,24 +31,35 @@ jobs:
         env:
           GITHUB_PAGES: "true"
 
-      - name: Prepare PWA files for GitHub Pages
+      - name: Prepare files for GitHub Pages
         run: |
+          set -e
           cp dist/client/_shell.html dist/client/index.html
           cp public/manifest.webmanifest dist/client/manifest.webmanifest
 
-          # Виправляємо неправильні шляхи маніфесту/іконки
-          sed -i 's|href="/__grok/manifest.webmanifest"|href="/Grok_sandbox/manifest.webmanifest"|g' dist/client/index.html
-          sed -i 's|href="/__grok/icon-180.png"|href="/Grok_sandbox/__grok/icon-180.png"|g' dist/client/index.html
+          # Безпечна заміна шляхів через Python (не ламає HTML)
+          python3 << 'PY'
+          from pathlib import Path
+          p = Path("dist/client/index.html")
+          html = p.read_text(encoding="utf-8")
+          html = html.replace('href="/__grok/manifest.webmanifest"', 'href="/Grok_sandbox/manifest.webmanifest"')
+          html = html.replace('href="/__grok/icon-180.png"', 'href="/Grok_sandbox/__grok/icon-180.png"')
+          if 'apple-mobile-web-app-capable' not in html:
+              html = html.replace(
+                  '</head>',
+                  '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+                  '<meta name="apple-mobile-web-app-title" content="Aurora">\n'
+                  '</head>'
+              )
+          p.write_text(html, encoding="utf-8")
+          print("OK, head tags:")
+          for line in html.splitlines():
+              if any(x in line for x in ("manifest", "apple-touch", "apple-mobile", "theme-color")):
+                  print(line)
+          PY
 
-          # Додаємо apple-mobile-web-app-capable, якщо немає
-          if ! grep -q 'apple-mobile-web-app-capable' dist/client/index.html; then
-            sed -i 's|</head>|<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Aurora">\n</head>|' dist/client/index.html
-          fi
-
-          echo "=== head tags ==="
-          grep -E 'manifest|apple-touch|apple-mobile|theme-color' dist/client/index.html || true
-          echo "=== manifest file ==="
-          cat dist/client/manifest.webmanifest
+          echo "=== files ==="
+          ls -la dist/client
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
