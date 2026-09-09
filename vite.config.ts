@@ -147,13 +147,7 @@ function authPopupPlugin(): Plugin {
 // AGENTS.md § "First scaffold".
 export default defineConfig(({ command, isPreview }) => ({
   base: process.env.GITHUB_PAGES === "true" ? "/Grok_sandbox/" : "/",
-  // ================
 
-  server: {
-    host: "0.0.0.0",
-    port: 8080,
-    strictPort: true,
-  },
   server: {
     host: "0.0.0.0",
     port: 8080,
@@ -175,18 +169,15 @@ export default defineConfig(({ command, isPreview }) => ({
     grokPwaPlugin(),
     tailwindcss(),
     tanstackStart({
-  spa: {
-    enabled: true,
-  },
-}),
+      spa: {
+        enabled: true,
+      },
+    }),
     ...(command === "build" || isPreview
       ? [
           nitro({
             preset: "static",
-            // Auto-registers server/middleware/* (the PWA install page +
-            // manifest + head-tag middleware). Nitro v3 defaults serverDir to
-            // false, so removing this silently unwires /?install=1 on deploys.
-            serverDir: "./server",
+            // serverDir: "./server",
           }),
         ]
       : []),
