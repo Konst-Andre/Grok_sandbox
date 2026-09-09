@@ -33,20 +33,21 @@ jobs:
 
       - name: Prepare PWA files for GitHub Pages
         run: |
-          # SPA shell → index.html
           cp dist/client/_shell.html dist/client/index.html
-
-          # Копіюємо маніфест (Vite міг його вже покласти, але на всяк випадок)
           cp public/manifest.webmanifest dist/client/manifest.webmanifest
 
-          # Додаємо PWA-теги в <head>, якщо їх ще немає
-          if ! grep -q 'rel="manifest"' dist/client/index.html; then
-            sed -i 's|</head>|<link rel="manifest" href="/Grok_sandbox/manifest.webmanifest">\n<link rel="apple-touch-icon" href="/Grok_sandbox/__grok/icon-180.png">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Aurora">\n<meta name="theme-color" content="#000000">\n</head>|' dist/client/index.html
+          # Виправляємо неправильні шляхи маніфесту/іконки
+          sed -i 's|href="/__grok/manifest.webmanifest"|href="/Grok_sandbox/manifest.webmanifest"|g' dist/client/index.html
+          sed -i 's|href="/__grok/icon-180.png"|href="/Grok_sandbox/__grok/icon-180.png"|g' dist/client/index.html
+
+          # Додаємо apple-mobile-web-app-capable, якщо немає
+          if ! grep -q 'apple-mobile-web-app-capable' dist/client/index.html; then
+            sed -i 's|</head>|<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Aurora">\n</head>|' dist/client/index.html
           fi
 
-          echo "=== dist/client ==="
-          ls -la dist/client
-          echo "=== manifest ==="
+          echo "=== head tags ==="
+          grep -E 'manifest|apple-touch|apple-mobile|theme-color' dist/client/index.html || true
+          echo "=== manifest file ==="
           cat dist/client/manifest.webmanifest
 
       - name: Upload artifact
